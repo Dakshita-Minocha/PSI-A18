@@ -1,12 +1,12 @@
 ﻿using PSI;
 using PSI.Ops;
 using System.Diagnostics;
-
+using static System.Console;
 static class Start {
    static void Main () {
-      Test1 ();      // Test ExprEval and ExprILGen
-      Test2 ();      // Test ExprTyper and ExprGrapher
-      Test3 ();      // Type checks on various expressions
+      //Test1 ();      // Test ExprEval and ExprILGen
+      //Test2 ();      // Test ExprTyper and ExprGrapher
+      //Test3 ();      // Type checks on various expressions
       Test4 ();      // Tokenizer - printout of invalid token
    }
 
@@ -67,34 +67,35 @@ static class Start {
 
    // Tokenizer test of valid and invalid programs
    static void Test4 () {
-      Console.WriteLine ("-----------------");
-      Console.WriteLine ("Valid program");
-      var tokenizer = new Tokenizer (Prog0);
-      int line = 1;
+      var prog1 = Prog0.Replace ("prod * i;", "prod ? i?").Replace ("for i := 1 to 10 do begin", "for i != 1 to 10 do begin");
+      var tokenizer = new Tokenizer (prog1);
+      var line = 1;
+      Write ($"File: {tokenizer.FileName}\n───┬────────────────");
+      List<Token> errorTokens = new ();
       for (; ; ) {
          var token = tokenizer.Next ();
          if (token.Kind == Token.E.EOF) break;
-         while (line < token.Line) { Console.WriteLine (); line++; }
-         Console.Write ($"{token}  ");
+         if (line <= token.Line) {
+            if (line == token.Line && errorTokens.Count != 0) {
+               WriteLine ();
+               for (int i = 0; i < errorTokens.Count; i++)
+                  errorTokens[i].PrintError (i == errorTokens.Count - 1);
+               errorTokens.Clear ();
+            }
+            Write ($"\n{line++,3}│ ");
+         }
+         Write ($"{token} ");
+         if (token.Kind == Token.E.ERROR) { errorTokens.Add (token); }
       }
-      Console.WriteLine (); Console.WriteLine ();
-
-      Console.WriteLine ("Testing invalid program:");
-      var prog1 = Prog0.Replace ("prod * i;", "prod * i?");
-      tokenizer = new Tokenizer (prog1);
-      for (; ; ) {
-         var token = tokenizer.Next ();
-         if (token.Kind == Token.E.ERROR) { token.PrintError (); break; }
-         if (token.Kind == Token.E.EOF) break;
-      }
-      Console.WriteLine ();
-      Console.Write ("\nPress any key..."); Console.ReadKey (true);
+      WriteLine ();
+      Write ("\nPress any key..."); ReadKey (true);
    }
+
    static string Prog0 = """
       program Expr;
       var
         i, fib: integer;
-
+ 
       function Fibo (n: integer) : integer;
       var 
         i, prod: integer;
@@ -105,7 +106,7 @@ static class Start {
         end
         Fibo := prod;
       end;
-
+ 
       begin
         for i := 1 to 10 do begin
           fib := Fibo (i);

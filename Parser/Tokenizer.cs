@@ -1,4 +1,8 @@
 namespace PSI;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Collections.Generic;
+
+using System;
 using static Token.E;
 
 // Converts a stream of text to PSI Tokens
@@ -21,7 +25,7 @@ public class Tokenizer {
          char ch = mText[mN];
          if (char.IsWhiteSpace (ch)) {
             if (ch == '\n') { mLineStart = mN; mLine++; }
-            mN++; continue; 
+            mN++; continue;
          }
          if (char.IsLetter (ch)) return IdentifierOrKeyword ();
          if (char.IsDigit (ch)) return Number ();
@@ -34,17 +38,18 @@ public class Tokenizer {
    // Implementation ------------------------------------------------
    // If we see a numeric digit, construct a number token
    Token Number () {
+      string text = "";
       var m = sExpr.Match (mText[mN..]);
       if (m.Success) {
          int start = mN;
-         string text = mText[mN..(mN + m.Length)];
+         text = mText[mN..(mN + m.Length)];
          mN += m.Length;
          if (text.Contains ('.') || text.Contains ('e') || text.Contains ('E'))
             return Make (REAL, text, start);
          else
             return Make (INTEGER, text, start);
       }
-      return Make (ERROR, "Invalid number", mN);
+      return Make (ERROR, text, mN, "Invalid number");
    }
    static Regex sExpr = new (@"^[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
@@ -60,7 +65,7 @@ public class Tokenizer {
       int start = mN++;
       while (mN < mText.Length && mText[mN++] != '\'') { }
       string text = mText[(start + 1)..(mN - 1)];
-      if (text.Length != 1) return Make (ERROR, "Invalid character", start);
+      if (text.Length != 1) return Make (ERROR, text, start, "Invalid character");
       return Make (CHAR, text, start);
    }
 
@@ -71,9 +76,9 @@ public class Tokenizer {
       string s = mText[start..mN];
       if (s == s.ToLower () && Enum.TryParse (s, true, out Token.E kind) && kind < _ENDKEYWORDS)
          return Make (kind, s, start);
-      return s switch { 
-         "true" or "false" => Make (BOOLEAN, s, start), 
-         _ => Make (IDENT, s, start) 
+      return s switch {
+         "true" or "false" => Make (BOOLEAN, s, start),
+         _ => Make (IDENT, s, start)
       };
    }
 
@@ -82,16 +87,18 @@ public class Tokenizer {
       foreach (var (kind, text) in Token.Match) {
          int n = text.Length;
          if (mN + n < mText.Length && text == mText[mN..(mN + n)]) {
-            int start = mN; mN += n; 
+            int start = mN; mN += n;
             return Make (kind, text, start);
          }
       }
-      return Make (ERROR, $"Unexpected '{mText[mN]}'", mN);
+      return Make (ERROR, $"{mText[mN]}", mN, $"Unexpected '{mText[mN++]}'");
    }
 
    // Helper functions 
-   Token Make (Token.E kind, string text, int n) 
-      => new (this, kind, text, mLine, n - mLineStart);
+   Token Make (Token.E kind, string text, int n, string msg)
+      => new (this, kind, text, mLine, n - mLineStart, msg);
    Token Make (Token.E kind, int n)
-      => Make (kind, "", n);
+      => Make (kind, "", n, "");
+   Token Make (Token.E kind, string text, int n)
+     => Make (kind, text, n, "");
 }
