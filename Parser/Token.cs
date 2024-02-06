@@ -39,15 +39,15 @@ public class Token {
    // Utility function used to echo an error to the console
    public void PrintError (bool isLast) {
       if (Kind != ERROR) throw new Exception ("PrintError called on a non-error token");
-      if (y != Line) (x, y) = (0, Line);
-      x = Math.Max (x, Column - ErrorMessage.Length / 2) + 1 + x;
+      if (mY != Line) (mX, mY) = (0, Line);
+      mX = Math.Max (mX, Column - ErrorMessage.Length / 2) + 1 + mX;
       Console.ForegroundColor = ConsoleColor.Yellow;
       Console.WriteLine ("^", Console.CursorLeft = Column);
-      Console.WriteLine ($"{ErrorMessage}", Console.CursorLeft = x);
+      Console.WriteLine ($"{ErrorMessage}", Console.CursorLeft = mX);
       Console.ResetColor ();
-      Console.CursorTop = isLast ? Console.CursorTop : Line + 2;
+      Console.CursorTop = isLast ? Console.CursorTop : Console.CursorTop - 2;
    }
-   static int x, y;
+   static int mX, mY;
 
    // Helper used by the parser (maps operator sequences to E values)
    public static List<(E Kind, string Text)> Match = new () {
