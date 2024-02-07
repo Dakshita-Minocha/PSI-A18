@@ -42,10 +42,10 @@ public class Token {
       if (mY != Line) (mX, mY) = (0, Line);
       mX = Math.Max (mX, Column - ErrorMessage.Length / 2) + 1 + mX;
       Console.ForegroundColor = ConsoleColor.Yellow;
-      Console.WriteLine ("^", Console.CursorLeft = Column);
+      Console.WriteLine ("^", Console.CursorLeft = Column, Console.CursorTop += 1);
       Console.WriteLine ($"{ErrorMessage}", Console.CursorLeft = mX);
       Console.ResetColor ();
-      Console.CursorTop = isLast ? Console.CursorTop : Console.CursorTop - 2;
+      Console.CursorTop = isLast ? Console.CursorTop - 1: Console.CursorTop - 3;
    }
    static int mX, mY;
 
