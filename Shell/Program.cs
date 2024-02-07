@@ -67,36 +67,29 @@ static class Start {
 
    // Tokenizer test of valid and invalid programs
    static void Test4 () {
-      var prog1 = Prog0.Replace ("prod := prod * i;", "prod := prod ? i?").Replace ("for i := 1 to 10 do begin", "for i != 1 to 10 do begin");
-      var tokenizer = new Tokenizer (prog1);
-      List<Token> errorTokens = new (), tokens = new ();
-
+      Console.WriteLine ("-----------------");
+      Console.WriteLine ("Valid program");
+      var tokenizer = new Tokenizer (Prog0);
+      int line = 1;
       for (; ; ) {
          var token = tokenizer.Next ();
          if (token.Kind == Token.E.EOF) break;
-         tokens.Add (token);
-         if (token.Kind == Token.E.ERROR) errorTokens.Add (token);
+         while (line < token.Line) { Console.WriteLine (); line++; }
+         Console.Write ($"{token}  ");
       }
+      Console.WriteLine (); Console.WriteLine ();
 
-      if (errorTokens.Count == 0) { WriteLine ("No errors found."); return; }
-      var line = 0;
-      Write ($"File: {tokenizer.FileName}\n───┬────────────────");
-      for (int i = 0; errorTokens.Count != 0; i++) {
-         var error = errorTokens.FirstOrDefault ();
-         foreach (var token in tokens.Where (token => token.Line >= error?.Line - 2 && token.Line <= error?.Line + 2)) {
-            // Print error on line after error token
-            while (token.Line == errorTokens.FirstOrDefault ()?.Line + 1) {
-               error = errorTokens.FirstOrDefault ();
-               error?.PrintError (errorTokens.Count <= 1 || errorTokens[1]?.Line != error?.Line);
-               errorTokens.RemoveAt (0);
-            }
-            // Print tokens
-            if (line != token.Line) Write ($"\n{line = token.Line,3}│ ");
-            Write ($"{token.Text} ");
-         }
-         Write ("\n\\\\-------------------------------\n");
+      Console.WriteLine ("Testing invalid program:");
+      var prog1 = Prog0.Replace ("prod * i;", "prod * i?");
+      tokenizer = new Tokenizer (prog1);
+      for (; ; ) {
+         var token = tokenizer.Next ();
+         if (token.Kind == Token.E.ERROR) { 
+            token.PrintError (); break; }
+         if (token.Kind == Token.E.EOF) break;
       }
-      Write ("\nPress any key..."); ReadKey (true);
+      Console.WriteLine ();
+      Console.Write ("\nPress any key..."); Console.ReadKey (true);
    }
 
    static string Prog0 = """
