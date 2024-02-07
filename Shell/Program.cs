@@ -69,25 +69,33 @@ static class Start {
    static void Test4 () {
       var prog1 = Prog0.Replace ("prod * i;", "prod ? i?").Replace ("for i := 1 to 10 do begin", "for i != 1 to 10 do begin");
       var tokenizer = new Tokenizer (prog1);
-      var line = 1;
-      Write ($"File: {tokenizer.FileName}\n───┬────────────────");
-      List<Token> errorTokens = new ();
+      List<Token> errorTokens = new (), tokens = new ();
+
       for (; ; ) {
          var token = tokenizer.Next ();
          if (token.Kind == Token.E.EOF) break;
-         if (line <= token.Line) {
-            if (line == token.Line && errorTokens.Count != 0) {
-               WriteLine ();
-               for (int i = 0; i < errorTokens.Count; i++)
-                  errorTokens[i].PrintError (i == errorTokens.Count - 1);
-               errorTokens.Clear ();
-            }
-            Write ($"\n{line++,3}│ ");
-         }
-         Write ($"{token} ");
-         if (token.Kind == Token.E.ERROR) { errorTokens.Add (token); }
+         tokens.Add (token);
+         if (token.Kind == Token.E.ERROR) errorTokens.Add (token);
       }
-      WriteLine ();
+
+      if (errorTokens.Count == 0) { WriteLine ("No errors found."); return; }
+      var line = 1;
+      Write ($"File: {tokenizer.FileName}\n───┬────────────────");
+      for (int i = 0; errorTokens.Count != 0; i++) {
+         var error = errorTokens.FirstOrDefault ();
+         foreach (var token in tokens.Where (token => token.Line >= error?.Line - 2 && token.Line <= error?.Line + 2)) {
+            // Print error on line after error token
+            while (token.Line == errorTokens.FirstOrDefault ()?.Line + 1) {
+               error = errorTokens.FirstOrDefault ();
+               error?.PrintError (errorTokens.Count <= 1 || errorTokens[1]?.Line != error?.Line);
+               errorTokens.RemoveAt (0);
+            }
+            // Print tokens
+            if (line != token.Line) Write ($"\n{line = token.Line,3}│ ");
+            Write ($"{token.Text} ");
+         }
+         Write ("\n\\\\-------------------------------\n");
+      }
       Write ("\nPress any key..."); ReadKey (true);
    }
 
