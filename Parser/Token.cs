@@ -39,16 +39,17 @@ public class Token {
    // Utility function used to echo an error to the console
    public void PrintError () {
       if (Kind != ERROR) throw new Exception ("PrintError called on a non-error token");
-      int start = Line > 3 ? Line - 3 : 0, end = Line + 2 <= Source.Lines.Length ? Line + 2 : Source.Lines.Length, line = start + 1;
+      int start = Line > 3 ? Line - 3 : 0, end = Math.Min (Line + 2, Source.Lines.Length);
       Console.WriteLine ($"File: {Source.FileName}\n───┬────────────────");
-      foreach (var str in Source.Lines[start..Line]) Console.WriteLine ($"{line++,3}│ {str}");
-      Console.ForegroundColor = ConsoleColor.Yellow;
-      Console.WriteLine ("^", Console.CursorLeft = Column + 4);
-      Console.WriteLine ($"{ErrorMessage}", Console.CursorLeft = Math.Max (0, Column - ErrorMessage.Length / 2) + 5);
-      Console.ResetColor ();
-      foreach (var str in Source.Lines[Line..end]) {
-         if (str is "\r") break;
-         Console.WriteLine ($"{line++,3}│ {str}");
+      for (int i = start; i < end; i++) {
+         if (Source.Lines[i] is "\r") break;
+         Console.WriteLine ($"{i + 1,3}│ {Source.Lines[i]}");
+         if (i == Line - 1) {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine ("^", Console.CursorLeft = Column + 4); // +4 to account for formatting
+            Console.WriteLine ($"{ErrorMessage}", Console.CursorLeft = Math.Max (0, Column - ErrorMessage.Length / 2) + 5);
+            Console.ResetColor ();
+         }
       }
    }
 
