@@ -42,14 +42,15 @@ public class Token {
       int start = Line > 3 ? Line - 3 : 0, end = Line + 2 <= Source.Lines.Length ? Line + 2 : Source.Lines.Length, line = start + 1;
       Console.WriteLine ($"File: {Source.FileName}\n───┬────────────────");
       foreach (var str in Source.Lines[start..Line]) Console.WriteLine ($"{line++,3}│ {str}");
-      mX = Source.Lines[Line - 1].IndexOf ($"{Text}");
       Console.ForegroundColor = ConsoleColor.Yellow;
-      Console.WriteLine ("^", Console.CursorLeft = mX + 5);
-      Console.WriteLine ($"{ErrorMessage}", Console.CursorLeft = Math.Max (mX, Column - ErrorMessage.Length / 2) + 1);
+      Console.WriteLine ("^", Console.CursorLeft = Column + 4);
+      Console.WriteLine ($"{ErrorMessage}", Console.CursorLeft = Math.Max (0, Column - ErrorMessage.Length / 2) + 5);
       Console.ResetColor ();
-      Console.WriteLine ($"{line++,3}│ {string.Join ($"\n{line++,3}│ ", Source.Lines[Line..end])}");
+      foreach (var str in Source.Lines[Line..end]) {
+         if (str is "\r") break;
+         Console.WriteLine ($"{line++,3}│ {str}");
+      }
    }
-   static int mX;
 
    // Helper used by the parser (maps operator sequences to E values)
    public static List<(E Kind, string Text)> Match = new () {
