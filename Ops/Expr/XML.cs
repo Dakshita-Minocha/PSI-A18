@@ -27,8 +27,7 @@ public class ExprXML : Visitor<XElement> {
 
    public override XElement Visit (NBinary binary) {
       var node = new XElement ("Binary");
-      node.Add (binary.Left.Accept (this));
-      node.Add (binary.Right.Accept (this));
+      node.Add (binary.Left.Accept (this), binary.Right.Accept(this));
       node.SetAttributeValue ("Op", binary.Op.Kind);
       node.SetAttributeValue ("Type", binary.Type);
       return node;
