@@ -1,11 +1,12 @@
 ﻿using PSI;
 using PSI.Ops;
 using System.Diagnostics;
+using System.Xml.Linq;
 
 static class Start {
    static void Main () {
       Test1 ();      // Test ExprEval and ExprILGen
-      Test2 ();      // Test ExprTyper and ExprGrapher
+      Test2 ();      // Test ExprTyper, ExprGrapher, XML Generator
       Test3 ();      // Type checks on various expressions
       Test4 ();      // Tokenizer - printout of invalid token
    }
@@ -26,7 +27,7 @@ static class Start {
       Console.Write ("\nPress any key..."); Console.ReadKey (true);
    }
 
-   // Test type-assignment, graph generation
+   // Test type-assignment, graph generation, XML Generation
    static void Test2 () {
       string expr = "(pi + 3.5) + 2 <= 1 <> \"Hello\" + two > true + \"World\"";
       var node = new Parser (new Tokenizer (expr)).Parse ();
@@ -43,6 +44,12 @@ static class Start {
       graph.SaveTo ("c:/etc/test.html");
       var pi = new ProcessStartInfo ("c:/etc/test.html") { UseShellExecute = true };
       Process.Start (pi);
+
+      var xml = new ExprXML ();
+      node.Accept (xml).Save("C:/etc/ExprXML.xml");
+      pi = new ProcessStartInfo ("C:/etc/ExprXML.xml") { UseShellExecute= true };
+      Process.Start (pi);
+
       Console.Write ("\nPress any key..."); Console.ReadKey (true);
    }
 
