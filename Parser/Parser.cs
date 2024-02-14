@@ -3,7 +3,7 @@ using static Token.E;
 
 public class Parser {
    // Interface -------------------------------------------
-   public Parser (Tokenizer tokenizer) 
+   public Parser (Tokenizer tokenizer)
       => mToken = mPrevious = (mTokenizer = tokenizer).Next ();
 
    public NExpr Parse () {
@@ -14,7 +14,7 @@ public class Parser {
 
    // Implementation --------------------------------------
    // expression = equality .
-   NExpr Expression () 
+   NExpr Expression ()
       => Equality ();
 
    // equality = equality = comparison [ ("=" | "<>") comparison ] .
@@ -36,7 +36,7 @@ public class Parser {
    // term = factor { ( "+" | "-" | "or" ) factor } .
    NExpr Term () {
       var expr = Factor ();
-      while  (Match (ADD, SUB, OR)) 
+      while (Match (ADD, SUB, OR))
          expr = new NBinary (expr, Prev, Factor ());
       return expr;
    }
@@ -44,21 +44,21 @@ public class Parser {
    // factor = unary { ( "*" | "/" | "and" | "mod" ) unary } .
    NExpr Factor () {
       var expr = Unary ();
-      while (Match (MUL, DIV, AND, MOD)) 
+      while (Match (MUL, DIV, AND, MOD))
          expr = new NBinary (expr, Prev, Unary ());
       return expr;
    }
 
    // unary = ( "-" | "+" ) unary | primary .
    NExpr Unary () {
-      if (Match (ADD, SUB)) 
+      if (Match (ADD, SUB))
          return new NUnary (Prev, Unary ());
       return Primary ();
    }
 
-   // primary = IDENTIFIER | INTEGER | REAL | STRING | "(" expression ")" | "not" primary .
+   // primary = IDENTIFIER | INTEGER | REAL | STRING | "(" expression ")" | "not" primary | IDENTIFIER arglist.
    NExpr Primary () {
-      if (Match (IDENT)) return new NIdentifier (Prev);
+      if (Match (IDENT)) return Peek(OPEN) ? new NFnCall (Prev, Arglist ()) : new NIdentifier (Prev);
       if (Match (INTEGER, REAL, BOOLEAN, CHAR, STRING)) return new NLiteral (Prev);
       if (Match (NOT)) return new NUnary (Prev, Primary ());
       Expect (OPEN, "Expecting identifier or literal");
@@ -67,11 +67,23 @@ public class Parser {
       return expr;
    }
 
+   NExpr[] Arglist () {
+      List<NExpr> expr = new ();
+      Expect (OPEN, "Expecting identifier or literal");
+      if(Peek(INTEGER, REAL, BOOLEAN, CHAR, STRING)) expr.Add (Primary ());
+      while (Match (COMMA)) expr.Add (Expression ());
+      Expect (CLOSE, "Expecting ')'");
+      return expr.ToArray ();
+   }
+
    // Helpers ---------------------------------------------
    // Expect to find a particular token
    void Expect (Token.E kind, string message) {
       if (!Match (kind)) throw new Exception (message);
    }
+
+   bool Peek (params Token.E[] kinds)
+      => kinds.Contains (mToken.Kind);
 
    // Match and consume a token on match
    bool Match (params Token.E[] kinds) {
