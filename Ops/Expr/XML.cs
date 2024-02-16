@@ -3,33 +3,30 @@ namespace PSI;
 
 // A basic XML generator, implemented using the Visitor pattern
 public class ExprXML : Visitor<XElement> {
-   public override XElement Visit (NLiteral literal) {
-      var node = new XElement ("Literal");
-      node.SetAttributeValue ("Value", literal.Value);
-      node.SetAttributeValue ("Type", literal.Type);
-      return node;
-   }
+   public override XElement Visit (NLiteral literal)
+      => Make ("Literal", ("Value", literal.Value), ("Type", literal.Type));
 
-   public override XElement Visit (NIdentifier identifier) {
-      var node = new XElement ("Ident");
-      node.SetAttributeValue ("Name", identifier.Name);
-      node.SetAttributeValue ("Type", identifier.Type);
-      return node;
-   }
+   public override XElement Visit (NIdentifier identifier)
+      => Make ("Ident", ("Name", identifier.Name), ("Type", identifier.Type));
 
-   public override XElement Visit (NUnary unary) {
-      var node = new XElement ("Unary");
-      node.Add (unary.Accept (this));
-      node.SetAttributeValue ("Op", unary.Op.Kind);
-      node.SetAttributeValue ("Type", unary.Type);
-      return node;
-   }
+   public override XElement Visit (NUnary unary)
+      => Make ("Unary",
+         unary.Accept (this),
+         ("Op", unary.Op.Kind), ("Type", unary.Type));
 
-   public override XElement Visit (NBinary binary) {
-      var node = new XElement ("Binary");
-      node.Add (binary.Left.Accept (this), binary.Right.Accept(this));
-      node.SetAttributeValue ("Op", binary.Op.Kind);
-      node.SetAttributeValue ("Type", binary.Type);
+   public override XElement Visit (NBinary binary)
+      => Make ("Binary",
+         binary.Left.Accept (this), binary.Right.Accept (this),
+         ("Op", binary.Op.Kind), ("Type", binary.Type));
+
+   XElement Make (string name, params object[] a) {
+      var node = new XElement (name);
+      foreach (var value in a)
+         switch (value) {
+            case XElement xe: node.Add (xe); break;
+            case (string Name, object Value): node.SetAttributeValue (Name, Value); break;
+            default: node.SetValue (value); break;
+         }
       return node;
    }
 }
