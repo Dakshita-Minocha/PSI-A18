@@ -67,10 +67,11 @@ public class Parser {
       return expr;
    }
 
+   // arglist =  "(" [expression { "," expression } ] ")"
    NExpr[] Arglist () {
       List<NExpr> expr = new ();
       Expect (OPEN, "Expecting identifier or literal");
-      if(Peek(INTEGER, REAL, BOOLEAN, CHAR, STRING)) expr.Add (Primary ());
+      expr.Add (Expression());
       while (Match (COMMA)) expr.Add (Expression ());
       Expect (CLOSE, "Expecting ')'");
       return expr.ToArray ();
